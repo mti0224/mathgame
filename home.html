@@ -141,9 +141,7 @@
     .miniBtn:active{ transform:translateY(1px); }
     .miniBtn svg{ width:18px;height:18px; opacity:.75; }
 
-    .section{
-      margin-top:18px;
-    }
+    .section{ margin-top:18px; }
     .sectionTitle{
       font-size:12px;
       font-weight:900;
@@ -245,6 +243,7 @@
     .foot a{ color:#6b78ff; text-decoration:none; font-weight:950; }
     .foot a:hover{ text-decoration:underline; }
 
+    /* toast only for "wrong answer" */
     .toast{
       margin:14px 22px 0;
       border-radius:14px;
@@ -255,16 +254,108 @@
       background:#fff;
       box-shadow: 0 12px 22px rgba(31,42,68,.10);
     }
-    .toast.ok{ border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.08); color:#0f5132; }
     .toast.bad{ border-color: rgba(239,68,68,.30); background: rgba(239,68,68,.08); color:#7f1d1d; }
-    .toast.info{ border-color: rgba(59,130,246,.30); background: rgba(59,130,246,.08); color:#0b3a7a; }
+
+    /* modal */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: rgba(15, 23, 42, .42);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+    }
+    .modalCard{
+      width:min(520px, 100%);
+      background:#fff;
+      border-radius: 20px;
+      border:1px solid rgba(31,42,68,.10);
+      box-shadow: 0 28px 60px rgba(0,0,0,.22);
+      overflow:hidden;
+      transform: translateY(8px) scale(.92);
+      opacity:0;
+    }
+    .modalCard.pop{
+      animation: pop .22s ease-out forwards;
+    }
+    @keyframes pop{
+      0%{ transform: translateY(10px) scale(.88); opacity:0; }
+      70%{ transform: translateY(0px) scale(1.04); opacity:1; }
+      100%{ transform: translateY(0px) scale(1); opacity:1; }
+    }
+    .modalHead{
+      padding:16px 18px;
+      background: linear-gradient(180deg, rgba(63,70,214,.10), rgba(63,70,214,.04));
+      border-bottom:1px solid rgba(31,42,68,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .modalTitle{
+      font-weight:950;
+      letter-spacing:.2px;
+    }
+    .modalClose{
+      width:34px;height:34px;
+      border-radius:12px;
+      border:1px solid rgba(31,42,68,.10);
+      background:#fff;
+      cursor:pointer;
+      display:grid;place-items:center;
+    }
+    .modalClose:active{ transform: translateY(1px); }
+    .modalBody{
+      padding:16px 18px 2px;
+      color:#24314f;
+      font-weight:800;
+      line-height:1.55;
+      white-space:pre-wrap;
+    }
+    .modalBody code{
+      display:block;
+      padding:10px 12px;
+      margin-top:10px;
+      border-radius:14px;
+      background:#f3f6ff;
+      border:1px solid rgba(63,70,214,.18);
+      font-weight:950;
+      color:#2b33c2;
+      letter-spacing:.2px;
+    }
+    .modalFoot{
+      padding:14px 18px 16px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+    }
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:950;
+    }
+    .btnGhost{
+      background:#eef1f7;
+      color:#1f2a44;
+      border:1px solid rgba(31,42,68,.10);
+    }
+    .btnPrimary{
+      background: linear-gradient(180deg, var(--primary), var(--primary-2));
+      color:#fff;
+      box-shadow: 0 16px 26px rgba(63,70,214,.22);
+    }
+    .btn:active{ transform: translateY(1px); }
 
     /* responsive */
     @media (max-width:720px){
       .brand{ font-size:30px; }
       .target .num{ font-size:64px; }
       .numbers{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .ops{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
   </style>
 </head>
@@ -274,7 +365,6 @@
       <div class="top">
         <div class="brand">
           <div class="icon" aria-hidden="true">
-            <!-- calculator-ish -->
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M7 3h10a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z" stroke="#3f46d6" stroke-width="1.8"/>
               <path d="M7 7h10" stroke="#3f46d6" stroke-width="1.8" stroke-linecap="round"/>
@@ -293,7 +383,8 @@
           <div class="num" id="targetNum">---</div>
         </div>
 
-        <div class="toast" id="toast"></div>
+        <!-- toast (only for wrong answer) -->
+        <div class="toast bad" id="toast"></div>
 
         <div class="content">
           <div class="exprBox" aria-label="算式輸入區">
@@ -302,13 +393,11 @@
 
             <div class="exprActions">
               <button class="miniBtn" id="btnClear" title="清空">
-                <!-- x -->
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M8 8l8 8M16 8l-8 8" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </button>
               <button class="miniBtn" id="btnBack" title="刪除最後一個">
-                <!-- trash-ish -->
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M9 3h6l1 2h4v2H4V5h4l1-2Z" fill="#111827" opacity=".72"/>
                   <path d="M7 9h10l-1 11a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2L7 9Z" stroke="#111827" stroke-width="1.6"/>
@@ -363,13 +452,29 @@
     </div>
   </div>
 
+  <!-- Modal (bounce popup) -->
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modalCard" id="modalCard">
+      <div class="modalHead">
+        <div class="modalTitle" id="modalTitle">提示</div>
+        <button class="modalClose" id="modalClose" aria-label="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 8l8 8M16 8l-8 8" stroke="#111827" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+      <div class="modalFoot" id="modalFoot"></div>
+    </div>
+  </div>
+
   <script>
     // ====== Game State ======
     const state = {
-      digits: [],          // [{id, v}]
+      digits: [],          // [{id, v, used}]
       target: 0,
       tokens: [],          // [{type:'num'|'op', ...}]
-      solution: "",        // stored hint (one solution)
+      solution: "",        // one stored answer (no parentheses)
       minUse: 5
     };
 
@@ -379,13 +484,92 @@
     const elPlaceholder = document.getElementById('placeholder');
     const elToast = document.getElementById('toast');
 
-    function showToast(msg, kind="info"){
-      elToast.className = `toast ${kind}`;
+    // ====== Toast (ONLY for wrong answer) ======
+    function showWrongToast(msg){
       elToast.textContent = msg;
       elToast.style.display = "block";
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(()=>{ elToast.style.display="none"; }, 2800);
+      clearTimeout(showWrongToast._t);
+      showWrongToast._t = setTimeout(()=>{ elToast.style.display="none"; }, 2600);
     }
+
+    // ====== Modal (bounce popup) ======
+    const modal = {
+      overlay: document.getElementById('modalOverlay'),
+      card: document.getElementById('modalCard'),
+      title: document.getElementById('modalTitle'),
+      body: document.getElementById('modalBody'),
+      foot: document.getElementById('modalFoot'),
+      closeBtn: document.getElementById('modalClose'),
+      _onOk: null,
+      _onCancel: null,
+      _locked: false
+    };
+
+    function openModal({title="提示", message="", code="", okText="確認", cancelText=null, onOk=null, onCancel=null, lockClose=false}){
+      modal._onOk = onOk;
+      modal._onCancel = onCancel;
+      modal._locked = !!lockClose;
+
+      modal.title.textContent = title;
+
+      // body
+      modal.body.innerHTML = "";
+      const p = document.createElement('div');
+      p.textContent = message;
+      modal.body.appendChild(p);
+
+      if(code){
+        const c = document.createElement('code');
+        c.textContent = code;
+        modal.body.appendChild(c);
+      }
+
+      // foot buttons
+      modal.foot.innerHTML = "";
+      if(cancelText){
+        const bCancel = document.createElement('button');
+        bCancel.className = "btn btnGhost";
+        bCancel.textContent = cancelText;
+        bCancel.addEventListener('click', ()=>{
+          if(modal._locked) return;
+          closeModal();
+          if(typeof modal._onCancel === "function") modal._onCancel();
+        });
+        modal.foot.appendChild(bCancel);
+      }
+
+      const bOk = document.createElement('button');
+      bOk.className = "btn btnPrimary";
+      bOk.textContent = okText;
+      bOk.addEventListener('click', ()=>{
+        closeModal();
+        if(typeof modal._onOk === "function") modal._onOk();
+      });
+      modal.foot.appendChild(bOk);
+
+      // show
+      modal.overlay.style.display = "flex";
+      modal.overlay.setAttribute("aria-hidden", "false");
+      modal.card.classList.remove("pop");
+      void modal.card.offsetWidth; // restart animation
+      modal.card.classList.add("pop");
+    }
+
+    function closeModal(){
+      if(modal._locked) return;
+      modal.overlay.style.display = "none";
+      modal.overlay.setAttribute("aria-hidden", "true");
+      modal._onOk = null;
+      modal._onCancel = null;
+    }
+
+    modal.closeBtn.addEventListener('click', ()=> closeModal());
+    modal.overlay.addEventListener('click', (e)=>{
+      if(e.target === modal.overlay) closeModal();
+    });
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === "Escape") closeModal();
+    });
 
     // ====== Expression rules ======
     function canAddNumber(){
@@ -398,10 +582,8 @@
     }
 
     function render(){
-      // target
       elTarget.textContent = String(state.target);
 
-      // chips
       elChips.innerHTML = "";
       state.tokens.forEach(t=>{
         const d = document.createElement('div');
@@ -411,7 +593,6 @@
       });
       elPlaceholder.style.display = state.tokens.length ? "none" : "block";
 
-      // numbers buttons
       elNumbers.innerHTML = "";
       for(const d of state.digits){
         const b = document.createElement('button');
@@ -420,7 +601,7 @@
         b.disabled = d.used;
         b.addEventListener('click', ()=>{
           if(!canAddNumber()){
-            showToast("目前只能放運算符號（因為上一個也是數字）。", "bad");
+            openModal({ title:"順序提醒", message:"目前只能放運算符號（因為上一個也是數字）。" });
             return;
           }
           d.used = true;
@@ -438,15 +619,18 @@
       return op;
     }
 
+    function tokensToExprString(tokens){
+      return tokens.map(t => t.type==="op" ? opToSymbol(t.op) : String(t.v)).join(" ");
+    }
+
     // ====== Evaluate (no parentheses, integer only, exact division) ======
     function evaluateTokens(tokens){
-      // must be num op num op num ...
-      if(tokens.length < 3) return { ok:false, err:"算式至少需要 2 個數字與 1 個符號。"};
-      if(tokens[0].type !== "num") return { ok:false, err:"算式必須以數字開頭。"};
-      if(tokens[tokens.length-1].type !== "num") return { ok:false, err:"算式不能以運算符號結尾。"};
+      if(tokens.length < 3) return { ok:false, err:"算式至少需要 2 個數字與 1 個符號。" };
+      if(tokens[0].type !== "num") return { ok:false, err:"算式必須以數字開頭。" };
+      if(tokens[tokens.length-1].type !== "num") return { ok:false, err:"算式不能以運算符號結尾。" };
       for(let i=0;i<tokens.length;i++){
-        if(i%2===0 && tokens[i].type!=="num") return { ok:false, err:"數字與符號必須交錯排列。"};
-        if(i%2===1 && tokens[i].type!=="op") return { ok:false, err:"數字與符號必須交錯排列。"};
+        if(i%2===0 && tokens[i].type!=="num") return { ok:false, err:"數字與符號必須交錯排列。" };
+        if(i%2===1 && tokens[i].type!=="op") return { ok:false, err:"數字與符號必須交錯排列。" };
       }
 
       const nums = [];
@@ -456,7 +640,7 @@
         else ops.push(t.op);
       }
       const v = evalNoParen(nums, ops);
-      if(v === null) return { ok:false, err:"除法必須整除（不可出現小數），且不可除以 0。"};
+      if(v === null) return { ok:false, err:"除法必須整除（不可出現小數），且不可除以 0。" };
       return { ok:true, value:v };
     }
 
@@ -492,11 +676,24 @@
       return acc;
     }
 
-    // ====== Puzzle generation (guarantee at least one solution using >=5 numbers) ======
+    // ====== Generator: avoid "direct cancellation" like +3-3 or *6/6 ======
     const OPS = ["+","-","*","/"];
 
+    function hasDirectCancellation(nums, ops){
+      // pattern: ... (+a -a) or (-a +a) or (*a /a) or (/a *a)
+      // in token form: n0 op0 n1 op1 n2 ...
+      for(let i=0; i<ops.length-1; i++){
+        const opA = ops[i], opB = ops[i+1];
+        const a = nums[i+1], b = nums[i+2];
+        if(a !== b) continue;
+
+        if((opA==="+" && opB==="-" ) || (opA==="-" && opB==="+" )) return true;
+        if((opA==="*" && opB==="/" ) || (opA==="/" && opB==="*" )) return true;
+      }
+      return false;
+    }
+
     function randomDigits(){
-      // six digits, 1..9, can repeat
       const arr = [];
       for(let i=0;i<6;i++){
         arr.push({ id: crypto.randomUUID?.() ?? (String(Math.random()).slice(2)+i), v: 1 + Math.floor(Math.random()*9), used:false });
@@ -504,56 +701,11 @@
       return arr;
     }
 
-    function generatePuzzle(){
-      // loop until solvable target exists
-      let attempts = 0;
-      while(true){
-        attempts++;
-        const digits = randomDigits().map(d=>d.v);
-
-        // Prefer solutions using 6 numbers; else 5 numbers.
-        let pack = findTargets(digits, 6, 220);
-        if(pack.targets.size === 0){
-          pack = findTargets(digits, 5, 220);
-        }
-
-        if(pack.targets.size > 0){
-          const list = Array.from(pack.targets);
-          const target = list[Math.floor(Math.random()*list.length)];
-          const solution = pack.oneSolution.get(target) || "";
-          // apply to state
-          state.digits = randomDigitsFromValues(digits);
-          state.target = target;
-          state.solution = solution;
-          state.tokens = [];
-          render();
-          showToast("已生成新題目（保證至少有一個解可用 ≥5 個數字）。", "info");
-          return;
-        }
-
-        // safety (should not hit often)
-        if(attempts > 60){
-          // fallback: fixed easy puzzle
-          const fallback = [8,4,3,7,3,3];
-          const pack2 = findTargets(fallback, 6, 220) || {targets:new Set([201]), oneSolution:new Map([[201,"8×(不允許括號)"]])};
-          state.digits = randomDigitsFromValues(fallback);
-          state.target = 201;
-          state.solution = "8×7×3 + 4×3 − 3（示意：需遵守無括號，請自己微調）";
-          state.tokens = [];
-          render();
-          showToast("已載入備用題目。", "info");
-          return;
-        }
-      }
-    }
-
     function randomDigitsFromValues(values){
-      // keep same values but unique ids and unused
       return values.map((v,i)=>({ id: (crypto.randomUUID?.() ?? (String(Math.random()).slice(2)+i)), v, used:false }));
     }
 
-    function findTargets(digits, k, capTargets=200){
-      // digits: [6 values], choose permutations length k, ops length k-1
+    function findTargets(digits, k, capTargets=250){
       const targets = new Set();
       const oneSolution = new Map();
       const used = Array(6).fill(false);
@@ -562,21 +714,19 @@
       const opCount = k-1;
       const totalOpComb = Math.pow(4, opCount);
 
-      function pushSolution(result, permIdx, opsArr){
+      function pushSolution(result, idxList, opsArr){
         if(result < 100 || result > 999) return;
         targets.add(result);
         if(!oneSolution.has(result)){
-          // build readable expression string (no parentheses)
-          let s = "" + digits[permIdx[0]];
+          let s = "" + digits[idxList[0]];
           for(let i=0;i<opsArr.length;i++){
-            s += " " + opToSymbol(opsArr[i]) + " " + digits[permIdx[i+1]];
+            s += " " + opToSymbol(opsArr[i]) + " " + digits[idxList[i+1]];
           }
           oneSolution.set(result, s);
         }
       }
 
       function evalWithOps(idxList, opMask){
-        // decode ops
         const nums = new Array(k);
         for(let i=0;i<k;i++) nums[i] = digits[idxList[i]];
 
@@ -587,6 +737,9 @@
           x >>= 2;
         }
 
+        // avoid direct cancellation in the *candidate solution itself*
+        if(hasDirectCancellation(nums, ops)) return null;
+
         const v = evalNoParen(nums, ops);
         if(v === null) return null;
         return { v, ops };
@@ -595,14 +748,11 @@
       function dfs(pos){
         if(targets.size >= capTargets) return;
         if(pos === k){
-          // enumerate ops by base-4 (use 2 bits each for speed)
-          // totalOpComb <= 1024 when k<=6
           for(let m=0; m<totalOpComb; m++){
             const out = evalWithOps(perm, m);
             if(!out) continue;
             const v = out.v;
             if(v >= 100 && v <= 999){
-              // store
               pushSolution(v, perm, out.ops);
               if(targets.size >= capTargets) return;
             }
@@ -623,11 +773,54 @@
       return { targets, oneSolution };
     }
 
+    function generatePuzzle(){
+      let attempts = 0;
+
+      while(true){
+        attempts++;
+        const raw = randomDigits().map(d=>d.v);
+
+        // prefer 6-digit solutions; else 5-digit solutions
+        let pack = findTargets(raw, 6, 260);
+        if(pack.targets.size === 0) pack = findTargets(raw, 5, 260);
+
+        if(pack.targets.size > 0){
+          const list = Array.from(pack.targets);
+
+          // choose a random target that has a stored solution (it will)
+          const target = list[Math.floor(Math.random()*list.length)];
+          const solution = pack.oneSolution.get(target) || "";
+
+          state.digits = randomDigitsFromValues(raw);
+          state.target = target;
+          state.solution = solution;
+          state.tokens = [];
+          render();
+          return;
+        }
+
+        if(attempts > 80){
+          // fallback (still avoids direct cancellation by design of chosen solution below)
+          const fallback = [8,4,3,7,3,3];
+          const pack2 = findTargets(fallback, 6, 500);
+          const list2 = Array.from(pack2.targets);
+          const t2 = list2.find(x=>x>=100 && x<=999) ?? 201;
+
+          state.digits = randomDigitsFromValues(fallback);
+          state.target = t2;
+          state.solution = pack2.oneSolution.get(t2) || "";
+          state.tokens = [];
+          render();
+          return;
+        }
+      }
+    }
+
     // ====== UI actions ======
     document.querySelectorAll('.opBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         if(!canAddOp()){
-          showToast("目前只能放數字（因為上一個是符號或尚未開始）。", "bad");
+          openModal({ title:"順序提醒", message:"目前只能放數字（因為上一個是符號或尚未開始）。" });
           return;
         }
         const op = btn.getAttribute('data-op');
@@ -637,11 +830,10 @@
     });
 
     document.getElementById('btnClear').addEventListener('click', ()=>{
-      // restore digits usage
       for(const d of state.digits) d.used = false;
       state.tokens = [];
       render();
-      showToast("已清空。", "info");
+      openModal({ title:"已清空", message:"已清空目前算式，可以重新開始。" });
     });
 
     document.getElementById('btnBack').addEventListener('click', ()=>{
@@ -657,37 +849,49 @@
     document.getElementById('btnSubmit').addEventListener('click', ()=>{
       const res = evaluateTokens(state.tokens);
       if(!res.ok){
-        showToast(res.err, "bad");
+        // not "wrong answer" => use modal
+        openModal({ title:"算式有問題", message: res.err });
         return;
       }
+
       if(res.value === state.target){
-        showToast(`✅ 正確！結果 = ${res.value}`, "ok");
+        // correct => show preset answer; confirm => new puzzle
+        openModal({
+          title:"✅ 恭喜答對！",
+          message:"參考答案如下（系統預設解）：",
+          code: state.solution || "(此題未保存參考答案)",
+          okText:"確認並生成新題目",
+          onOk: ()=>{
+            generatePuzzle();
+          },
+          lockClose:false
+        });
       }else{
-        showToast(`❌ 不正確：你的結果 = ${res.value}（目標 = ${state.target}）`, "bad");
+        // wrong answer => toast only
+        showWrongToast(`❌ 不正確：你的結果 = ${res.value}（目標 = ${state.target}）`);
       }
     });
 
     document.getElementById('btnNew').addEventListener('click', ()=>{
       generatePuzzle();
+      // 不額外提示（避免一直跳視窗）；若你希望也跳提示，把下面打開即可：
+      // openModal({ title:"新題目", message:"已生成新題目！" });
     });
 
     document.getElementById('btnHint').addEventListener('click', (e)=>{
       e.preventDefault();
       if(!state.solution){
-        showToast("這題目前沒有保存到參考答案。", "info");
+        openModal({ title:"參考答案", message:"這題目前沒有保存到參考答案。" });
         return;
       }
-      showToast("參考答案：" + state.solution, "info");
+      openModal({ title:"參考答案", message:"你可以參考這個解法（無括號）：", code: state.solution });
     });
 
-    // Keyboard support (optional): Backspace delete
+    // Keyboard support
     window.addEventListener('keydown', (e)=>{
       if(e.key === "Backspace"){
         e.preventDefault();
         document.getElementById('btnBack').click();
-      }
-      if(e.key === "Escape"){
-        document.getElementById('btnClear').click();
       }
       if(e.key === "Enter"){
         document.getElementById('btnSubmit').click();
