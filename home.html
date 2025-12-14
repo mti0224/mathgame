@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>數字運算挑戰</title>
+  <style>
+    :root{
+      --bg:#f3f5fb;
+      --card:#ffffff;
+      --primary:#3f46d6;
+      --primary-2:#2f36c8;
+      --text:#1f2a44;
+      --muted:#6b7280;
+      --line:#eef0f6;
+      --shadow: 0 18px 35px rgba(31,42,68,.12);
+      --shadow2: 0 10px 22px rgba(31,42,68,.10);
+      --radius:18px;
+      --radius2:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 50% -200px, rgba(63,70,214,.25), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+    }
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:34px 16px 40px;
+    }
+    .shell{ width:min(820px, 100%); }
+    .top{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      margin-bottom:18px;
+      text-align:center;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:900;
+      font-size:36px;
+      letter-spacing:.5px;
+      color:var(--primary);
+    }
+    .icon{
+      width:38px;height:38px;
+      display:grid;place-items:center;
+      background: rgba(63,70,214,.12);
+      border-radius:12px;
+      border:1px solid rgba(63,70,214,.18);
+    }
+    .desc{ color:#4b5563; font-weight:600; }
+    .warn{ color:#ef4444; font-weight:800; font-size:13px; }
+
+    .panel{
+      background:var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      border:1px solid rgba(31,42,68,.06);
+    }
+
+    .target{
+      background: linear-gradient(180deg, var(--primary), #3b40cf);
+      color:#fff;
+      padding:22px 18px 18px;
+      text-align:center;
+    }
+    .target .label{
+      font-weight:800;
+      opacity:.9;
+      letter-spacing:.8px;
+      font-size:14px;
+    }
+    .target .num{
+      font-weight:950;
+      font-size:76px;
+      line-height:1;
+      margin-top:8px;
+      letter-spacing:1px;
+    }
+
+    .content{ padding:22px 22px 18px; }
+
+    .exprBox{
+      position:relative;
+      border-radius:16px;
+      border:2px solid #cfd6e6;
+      background:#f1f4fb;
+      padding:14px 52px 14px 14px;
+      min-height:64px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.9);
+    }
+    .placeholder{
+      color:#a0a7b8;
+      font-weight:800;
+    }
+    .chips{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .chip{
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:900;
+      background:#fff;
+      border:1px solid rgba(31,42,68,.10);
+      box-shadow: 0 6px 14px rgba(31,42,68,.08);
+      user-select:none;
+    }
+    .chip.op{ background:#eef2ff; border-color:rgba(63,70,214,.25); color:#2b33c2; }
+
+    .exprActions{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .miniBtn{
+      width:34px;height:34px;
+      border-radius:10px;
+      border:1px solid rgba(31,42,68,.12);
+      background:#fff;
+      display:grid;place-items:center;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(31,42,68,.10);
+    }
+    .miniBtn:active{ transform:translateY(1px); }
+    .miniBtn svg{ width:18px;height:18px; opacity:.75; }
+
+    .section{
+      margin-top:18px;
+    }
+    .sectionTitle{
+      font-size:12px;
+      font-weight:900;
+      color:#7c859a;
+      letter-spacing:.8px;
+      margin:12px 0 10px;
+    }
+
+    .numbers{
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap:14px;
+    }
+    .numBtn{
+      height:70px;
+      border-radius:16px;
+      border:1px solid rgba(31,42,68,.10);
+      background:#fff;
+      box-shadow: var(--shadow2);
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      font-size:32px;
+      font-weight:950;
+      color:var(--primary);
+      user-select:none;
+      transition: transform .06s ease;
+    }
+    .numBtn:active{ transform: translateY(1px); }
+    .numBtn[disabled]{
+      opacity:.35;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .ops{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:14px;
+    }
+    .opBtn{
+      height:62px;
+      border-radius:14px;
+      border:1px solid rgba(31,42,68,.10);
+      background:#e8ecf4;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      font-size:26px;
+      font-weight:950;
+      color:#2c3347;
+      user-select:none;
+    }
+    .opBtn:active{ transform: translateY(1px); }
+
+    .bottomBar{
+      padding:14px 22px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-top:1px solid var(--line);
+    }
+    .linkBtn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:#2b33c2;
+      font-weight:900;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:12px;
+      user-select:none;
+    }
+    .linkBtn:hover{ background: rgba(63,70,214,.08); }
+    .submit{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      border:none;
+      cursor:pointer;
+      padding:16px 22px;
+      border-radius:16px;
+      background: linear-gradient(180deg, var(--primary), var(--primary-2));
+      color:#fff;
+      font-weight:950;
+      font-size:16px;
+      box-shadow: 0 16px 26px rgba(63,70,214,.28);
+    }
+    .submit:active{ transform:translateY(1px); }
+
+    .foot{
+      text-align:center;
+      color:#98a1b6;
+      font-weight:800;
+      font-size:12px;
+      padding:0 22px 20px;
+    }
+    .foot a{ color:#6b78ff; text-decoration:none; font-weight:950; }
+    .foot a:hover{ text-decoration:underline; }
+
+    .toast{
+      margin:14px 22px 0;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:900;
+      display:none;
+      border:1px solid rgba(31,42,68,.10);
+      background:#fff;
+      box-shadow: 0 12px 22px rgba(31,42,68,.10);
+    }
+    .toast.ok{ border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.08); color:#0f5132; }
+    .toast.bad{ border-color: rgba(239,68,68,.30); background: rgba(239,68,68,.08); color:#7f1d1d; }
+    .toast.info{ border-color: rgba(59,130,246,.30); background: rgba(59,130,246,.08); color:#0b3a7a; }
+
+    /* responsive */
+    @media (max-width:720px){
+      .brand{ font-size:30px; }
+      .target .num{ font-size:64px; }
+      .numbers{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .ops{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="top">
+        <div class="brand">
+          <div class="icon" aria-hidden="true">
+            <!-- calculator-ish -->
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 3h10a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z" stroke="#3f46d6" stroke-width="1.8"/>
+              <path d="M7 7h10" stroke="#3f46d6" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M8 11h3v3H8v-3Zm5 0h3v3h-3v-3ZM8 16h3v3H8v-3Zm5 0h3v3h-3v-3Z" fill="#3f46d6" opacity=".85"/>
+            </svg>
+          </div>
+          <div>數字運算挑戰</div>
+        </div>
+        <div class="desc">使用下方數字與符號，拼出目標數字。</div>
+        <div class="warn">注意：先乘除後加減，不可使用括號。</div>
+      </div>
+
+      <div class="panel">
+        <div class="target">
+          <div class="label">目標數字 (TARGET)</div>
+          <div class="num" id="targetNum">---</div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <div class="content">
+          <div class="exprBox" aria-label="算式輸入區">
+            <div class="chips" id="chips"></div>
+            <div class="placeholder" id="placeholder">請點選數字與符號...</div>
+
+            <div class="exprActions">
+              <button class="miniBtn" id="btnClear" title="清空">
+                <!-- x -->
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M8 8l8 8M16 8l-8 8" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button class="miniBtn" id="btnBack" title="刪除最後一個">
+                <!-- trash-ish -->
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M9 3h6l1 2h4v2H4V5h4l1-2Z" fill="#111827" opacity=".72"/>
+                  <path d="M7 9h10l-1 11a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2L7 9Z" stroke="#111827" stroke-width="1.6"/>
+                  <path d="M10 12v7M14 12v7" stroke="#111827" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">可用數字 (NUMBERS)</div>
+            <div class="numbers" id="numbers"></div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">運算符號 (OPERATORS)</div>
+            <div class="ops">
+              <div class="opBtn" data-op="+">+</div>
+              <div class="opBtn" data-op="-">−</div>
+              <div class="opBtn" data-op="*">×</div>
+              <div class="opBtn" data-op="/">÷</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottomBar">
+          <div class="linkBtn" id="btnNew">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="#2b33c2" stroke-width="2" stroke-linecap="round"/>
+              <path d="M20 4v6h-6" stroke="#2b33c2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            新題目
+          </div>
+
+          <button class="submit" id="btnSubmit">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 7 10 17l-4-4" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            提交計算
+          </button>
+        </div>
+
+        <div class="foot">
+          想不到？<a href="#" id="btnHint">看參考答案</a>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:14px;color:#8b93a8;font-weight:800;font-size:12px;">
+        規則：使用提供的6個數字和四則運算符號拼出目標數字。<br/>
+        數字不一定要全部用完・運算遵循先乘除後加減・不可使用括號/小數/指數。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== Game State ======
+    const state = {
+      digits: [],          // [{id, v}]
+      target: 0,
+      tokens: [],          // [{type:'num'|'op', ...}]
+      solution: "",        // stored hint (one solution)
+      minUse: 5
+    };
+
+    const elTarget = document.getElementById('targetNum');
+    const elNumbers = document.getElementById('numbers');
+    const elChips = document.getElementById('chips');
+    const elPlaceholder = document.getElementById('placeholder');
+    const elToast = document.getElementById('toast');
+
+    function showToast(msg, kind="info"){
+      elToast.className = `toast ${kind}`;
+      elToast.textContent = msg;
+      elToast.style.display = "block";
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>{ elToast.style.display="none"; }, 2800);
+    }
+
+    // ====== Expression rules ======
+    function canAddNumber(){
+      if(state.tokens.length === 0) return true;
+      return state.tokens[state.tokens.length-1].type === "op";
+    }
+    function canAddOp(){
+      if(state.tokens.length === 0) return false;
+      return state.tokens[state.tokens.length-1].type === "num";
+    }
+
+    function render(){
+      // target
+      elTarget.textContent = String(state.target);
+
+      // chips
+      elChips.innerHTML = "";
+      state.tokens.forEach(t=>{
+        const d = document.createElement('div');
+        d.className = "chip" + (t.type==="op" ? " op":"");
+        d.textContent = t.type==="op" ? opToSymbol(t.op) : String(t.v);
+        elChips.appendChild(d);
+      });
+      elPlaceholder.style.display = state.tokens.length ? "none" : "block";
+
+      // numbers buttons
+      elNumbers.innerHTML = "";
+      for(const d of state.digits){
+        const b = document.createElement('button');
+        b.className = "numBtn";
+        b.textContent = d.v;
+        b.disabled = d.used;
+        b.addEventListener('click', ()=>{
+          if(!canAddNumber()){
+            showToast("目前只能放運算符號（因為上一個也是數字）。", "bad");
+            return;
+          }
+          d.used = true;
+          state.tokens.push({type:"num", id:d.id, v:d.v});
+          render();
+        });
+        elNumbers.appendChild(b);
+      }
+    }
+
+    function opToSymbol(op){
+      if(op === "*") return "×";
+      if(op === "/") return "÷";
+      if(op === "-") return "−";
+      return op;
+    }
+
+    // ====== Evaluate (no parentheses, integer only, exact division) ======
+    function evaluateTokens(tokens){
+      // must be num op num op num ...
+      if(tokens.length < 3) return { ok:false, err:"算式至少需要 2 個數字與 1 個符號。"};
+      if(tokens[0].type !== "num") return { ok:false, err:"算式必須以數字開頭。"};
+      if(tokens[tokens.length-1].type !== "num") return { ok:false, err:"算式不能以運算符號結尾。"};
+      for(let i=0;i<tokens.length;i++){
+        if(i%2===0 && tokens[i].type!=="num") return { ok:false, err:"數字與符號必須交錯排列。"};
+        if(i%2===1 && tokens[i].type!=="op") return { ok:false, err:"數字與符號必須交錯排列。"};
+      }
+
+      const nums = [];
+      const ops = [];
+      for(const t of tokens){
+        if(t.type==="num") nums.push(t.v);
+        else ops.push(t.op);
+      }
+      const v = evalNoParen(nums, ops);
+      if(v === null) return { ok:false, err:"除法必須整除（不可出現小數），且不可除以 0。"};
+      return { ok:true, value:v };
+    }
+
+    function evalNoParen(nums, ops){
+      // precedence: * and / first (left to right), then + and - (left to right)
+      let tNums = [nums[0]];
+      let tOps = [];
+
+      for(let i=0;i<ops.length;i++){
+        const op = ops[i];
+        const b = nums[i+1];
+        if(op === "*" || op === "/"){
+          const a = tNums[tNums.length-1];
+          if(op === "*"){
+            tNums[tNums.length-1] = a * b;
+          }else{
+            if(b === 0) return null;
+            if(a % b !== 0) return null;
+            tNums[tNums.length-1] = a / b;
+          }
+        }else{
+          tOps.push(op);
+          tNums.push(b);
+        }
+      }
+
+      let acc = tNums[0];
+      for(let i=0;i<tOps.length;i++){
+        const op = tOps[i];
+        const b = tNums[i+1];
+        acc = (op === "+") ? (acc + b) : (acc - b);
+      }
+      return acc;
+    }
+
+    // ====== Puzzle generation (guarantee at least one solution using >=5 numbers) ======
+    const OPS = ["+","-","*","/"];
+
+    function randomDigits(){
+      // six digits, 1..9, can repeat
+      const arr = [];
+      for(let i=0;i<6;i++){
+        arr.push({ id: crypto.randomUUID?.() ?? (String(Math.random()).slice(2)+i), v: 1 + Math.floor(Math.random()*9), used:false });
+      }
+      return arr;
+    }
+
+    function generatePuzzle(){
+      // loop until solvable target exists
+      let attempts = 0;
+      while(true){
+        attempts++;
+        const digits = randomDigits().map(d=>d.v);
+
+        // Prefer solutions using 6 numbers; else 5 numbers.
+        let pack = findTargets(digits, 6, 220);
+        if(pack.targets.size === 0){
+          pack = findTargets(digits, 5, 220);
+        }
+
+        if(pack.targets.size > 0){
+          const list = Array.from(pack.targets);
+          const target = list[Math.floor(Math.random()*list.length)];
+          const solution = pack.oneSolution.get(target) || "";
+          // apply to state
+          state.digits = randomDigitsFromValues(digits);
+          state.target = target;
+          state.solution = solution;
+          state.tokens = [];
+          render();
+          showToast("已生成新題目（保證至少有一個解可用 ≥5 個數字）。", "info");
+          return;
+        }
+
+        // safety (should not hit often)
+        if(attempts > 60){
+          // fallback: fixed easy puzzle
+          const fallback = [8,4,3,7,3,3];
+          const pack2 = findTargets(fallback, 6, 220) || {targets:new Set([201]), oneSolution:new Map([[201,"8×(不允許括號)"]])};
+          state.digits = randomDigitsFromValues(fallback);
+          state.target = 201;
+          state.solution = "8×7×3 + 4×3 − 3（示意：需遵守無括號，請自己微調）";
+          state.tokens = [];
+          render();
+          showToast("已載入備用題目。", "info");
+          return;
+        }
+      }
+    }
+
+    function randomDigitsFromValues(values){
+      // keep same values but unique ids and unused
+      return values.map((v,i)=>({ id: (crypto.randomUUID?.() ?? (String(Math.random()).slice(2)+i)), v, used:false }));
+    }
+
+    function findTargets(digits, k, capTargets=200){
+      // digits: [6 values], choose permutations length k, ops length k-1
+      const targets = new Set();
+      const oneSolution = new Map();
+      const used = Array(6).fill(false);
+      const perm = Array(k).fill(0);
+
+      const opCount = k-1;
+      const totalOpComb = Math.pow(4, opCount);
+
+      function pushSolution(result, permIdx, opsArr){
+        if(result < 100 || result > 999) return;
+        targets.add(result);
+        if(!oneSolution.has(result)){
+          // build readable expression string (no parentheses)
+          let s = "" + digits[permIdx[0]];
+          for(let i=0;i<opsArr.length;i++){
+            s += " " + opToSymbol(opsArr[i]) + " " + digits[permIdx[i+1]];
+          }
+          oneSolution.set(result, s);
+        }
+      }
+
+      function evalWithOps(idxList, opMask){
+        // decode ops
+        const nums = new Array(k);
+        for(let i=0;i<k;i++) nums[i] = digits[idxList[i]];
+
+        const ops = new Array(opCount);
+        let x = opMask;
+        for(let i=0;i<opCount;i++){
+          ops[i] = OPS[x & 3];
+          x >>= 2;
+        }
+
+        const v = evalNoParen(nums, ops);
+        if(v === null) return null;
+        return { v, ops };
+      }
+
+      function dfs(pos){
+        if(targets.size >= capTargets) return;
+        if(pos === k){
+          // enumerate ops by base-4 (use 2 bits each for speed)
+          // totalOpComb <= 1024 when k<=6
+          for(let m=0; m<totalOpComb; m++){
+            const out = evalWithOps(perm, m);
+            if(!out) continue;
+            const v = out.v;
+            if(v >= 100 && v <= 999){
+              // store
+              pushSolution(v, perm, out.ops);
+              if(targets.size >= capTargets) return;
+            }
+          }
+          return;
+        }
+        for(let i=0;i<6;i++){
+          if(used[i]) continue;
+          used[i] = true;
+          perm[pos] = i;
+          dfs(pos+1);
+          used[i] = false;
+          if(targets.size >= capTargets) return;
+        }
+      }
+
+      dfs(0);
+      return { targets, oneSolution };
+    }
+
+    // ====== UI actions ======
+    document.querySelectorAll('.opBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(!canAddOp()){
+          showToast("目前只能放數字（因為上一個是符號或尚未開始）。", "bad");
+          return;
+        }
+        const op = btn.getAttribute('data-op');
+        state.tokens.push({type:"op", op});
+        render();
+      });
+    });
+
+    document.getElementById('btnClear').addEventListener('click', ()=>{
+      // restore digits usage
+      for(const d of state.digits) d.used = false;
+      state.tokens = [];
+      render();
+      showToast("已清空。", "info");
+    });
+
+    document.getElementById('btnBack').addEventListener('click', ()=>{
+      if(state.tokens.length === 0) return;
+      const last = state.tokens.pop();
+      if(last.type === "num"){
+        const d = state.digits.find(x=>x.id === last.id);
+        if(d) d.used = false;
+      }
+      render();
+    });
+
+    document.getElementById('btnSubmit').addEventListener('click', ()=>{
+      const res = evaluateTokens(state.tokens);
+      if(!res.ok){
+        showToast(res.err, "bad");
+        return;
+      }
+      if(res.value === state.target){
+        showToast(`✅ 正確！結果 = ${res.value}`, "ok");
+      }else{
+        showToast(`❌ 不正確：你的結果 = ${res.value}（目標 = ${state.target}）`, "bad");
+      }
+    });
+
+    document.getElementById('btnNew').addEventListener('click', ()=>{
+      generatePuzzle();
+    });
+
+    document.getElementById('btnHint').addEventListener('click', (e)=>{
+      e.preventDefault();
+      if(!state.solution){
+        showToast("這題目前沒有保存到參考答案。", "info");
+        return;
+      }
+      showToast("參考答案：" + state.solution, "info");
+    });
+
+    // Keyboard support (optional): Backspace delete
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === "Backspace"){
+        e.preventDefault();
+        document.getElementById('btnBack').click();
+      }
+      if(e.key === "Escape"){
+        document.getElementById('btnClear').click();
+      }
+      if(e.key === "Enter"){
+        document.getElementById('btnSubmit').click();
+      }
+    });
+
+    // init
+    generatePuzzle();
+  </script>
+</body>
+</html>
